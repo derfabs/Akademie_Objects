@@ -2,10 +2,13 @@
 
 ## Referenzen
 
+- [esp32 pinout](https://raw.githubusercontent.com/AchimPieters/esp32-homekit-camera/master/Images/ESP32-38%20PIN-DEVBOARD.png)
+- https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299
+
+## Python Referenzen
+
 - https://docs.micropython.org/en/latest/esp32/quickref.html#installing-micropython
 - https://docs.micropython.org/en/latest/esp32/general.html
-- https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299
-- [esp32 pinout](https://raw.githubusercontent.com/AchimPieters/esp32-homekit-camera/master/Images/ESP32-38%20PIN-DEVBOARD.png)
 - https://learn.adafruit.com/welcome-to-circuitpython
 - https://learn.adafruit.com/getting-started-with-web-workflow-using-the-code-editor
 - https://learn.adafruit.com/circuitpython-with-esp32-quick-start
@@ -18,6 +21,7 @@
 ## Circuitpython librarires
 
 - [DFPlayer](https://github.com/bablokb/circuitpython-dfplayer)
+- [VS1053B](https://github.com/adafruit/Adafruit_CircuitPython_VS1053)
 
 ## Micropython Installationanweisungen
 
