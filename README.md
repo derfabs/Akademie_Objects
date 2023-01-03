@@ -9,6 +9,7 @@
 - https://learn.adafruit.com/welcome-to-circuitpython
 - https://learn.adafruit.com/getting-started-with-web-workflow-using-the-code-editor
 - https://learn.adafruit.com/circuitpython-with-esp32-quick-start
+- https://learn.adafruit.com/mqtt-in-circuitpython/circuitpython-wifi-usage
 
 ## Micropython libraries
 
