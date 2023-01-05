@@ -166,3 +166,5 @@ cython_debug/
 
 radio/noise
 radio/tracks
+
+*/env
