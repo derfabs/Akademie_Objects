@@ -105,11 +105,11 @@ def play(noise_glob: str, tracks_glob: str, mqtt_client: mqtt.Client) -> None:
     global last_send_pos
 
     # get audio files
-    noise_paths = glob(noise_glob)
+    noise_paths = sorted(glob(noise_glob))
     if not len(noise_paths):
         raise RuntimeError('no .ogg file in noise folder.')
 
-    track_paths = glob(tracks_glob)
+    track_paths = sorted(glob(tracks_glob))
     if not len(track_paths):
         raise RuntimeError('no .ogg file in tracks folder.')
 
