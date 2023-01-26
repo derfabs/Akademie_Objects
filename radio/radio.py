@@ -15,6 +15,8 @@ track_ratio = 1  # must be higher than 0 (if above 1, then tracks will be absent
 mqtt_server = '192.168.88.22'
 mqtt_port = 1883
 
+initial_disable_max=50 #disable initial radio tuning for some amount. higher value means longer until noise is gone.
+
 message_delay = 50  # time between readings and sending data
 # ------ SETTINGS END ------
 
@@ -30,6 +32,8 @@ tracks_folder = 'tracks/*.ogg'
 volume = 0
 last_send_pos = 0
 reset = False
+initial_disable = 0
+last_initial_noise_factor = 0
 
 def map_range(x: Union[float, int], in_min: Union[float, int], in_max: Union[float, int], out_min: Union[float, int], out_max: Union[float, int]) -> float:
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
@@ -58,6 +62,7 @@ def on_message(client, userdata, msg) -> None:
     global tracks_folder
     global volume
     global reset
+    global initial_disable
 
     if msg.topic == 'general':
         if msg.payload.decode('utf-8') == 'reset':
@@ -65,6 +70,7 @@ def on_message(client, userdata, msg) -> None:
             tracks_folder = 'tracks/*.ogg'
             volume = 0
             reset = True
+            initial_disable=0
     elif msg.topic == 'radio/volume':
         try:
             volume = float(msg.payload)
@@ -73,9 +79,11 @@ def on_message(client, userdata, msg) -> None:
     elif msg.topic =='radio/noise':
         noise_folder = f'{msg.payload.decode("utf-8")}/*.ogg'
         reset = True
+        initial_disable=0
     elif msg.topic == 'radio/tracks':
         tracks_folder = f'{msg.payload.decode("utf-8")}/*.ogg'
         reset = True
+        initial_disable=0
 
 def main() -> None:
     # setup mqtt connection
@@ -103,6 +111,7 @@ def main() -> None:
 def play(noise_glob: str, tracks_glob: str, mqtt_client: mqtt.Client) -> None:
     global reset
     global last_send_pos
+    global last_initial_noise_factor
 
     # get audio files
     noise_paths = sorted(glob(noise_glob))
@@ -154,16 +163,27 @@ def play(noise_glob: str, tracks_glob: str, mqtt_client: mqtt.Client) -> None:
                 current = 0
 
             current_pos = map_range(current, 0, 1023, 0, 2 * math.pi * len(tracks))
+            
 
             current_send_pos = int(map_range(current, 0, 1023, 0, 255))
+            initial_disable+=abs(current_send_pos-last_send_pos)
             if current_send_pos != last_send_pos:
                 mqtt_client.publish('radio/poti', payload=current_send_pos, qos=0, retain=False)
                 last_send_pos = current_send_pos
-
+                
+            
+            
+        initial_noise_factor=clamp((1.0-initial_disable*1.0/initial_disable_max),0,1) #1=only noise, 0=radio working fully
+        if initial_noise_factor != last_initial_noise_factor: #changed
+            mqtt_client.publish('radio/initialnoise', payload=initial_noise_factor, qos=0, retain=False)
+            last_initial_noise_factor=initial_noise_factor
+            
         # set volumes
         noise_volume = ease(map_range(extend(math.cos(current_pos), noise_ratio, 1/noise_ratio), -noise_ratio, 1/noise_ratio, 0, 1), noise_easing_factor)
+        noise_volume = clamp(initial_noise_factor+noise_volume,0,1) #increase noise during initial noise phase
         channel_1.set_volume(noise_volume * clamp(volume, 0, 1))
         track_volume = ease(map_range(extend(math.cos(current_pos), track_ratio, 1/track_ratio), -track_ratio, 1/track_ratio, 1, 0), track_easing_factor)
+        track_volume = clamp(track_volume-initial_noise_factor,0,1) #reduce track volume during initial noise phase
         pygame.mixer.music.set_volume(track_volume * clamp(volume, 0, 1))
 
         # get which track to play
